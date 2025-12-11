@@ -23,15 +23,20 @@ class _StripePaymentButtonState extends State<StripePaymentButton> {
     });
 
     try {
-      print('StripePaymentButton: Initiating payment for trip ${widget.paymentSession.tripID}');
+      final isMockSession =
+          widget.paymentSession.sessionID.startsWith('mock_session');
+      print(
+          'StripePaymentButton: Initiating payment for trip ${widget.paymentSession.tripID}');
       await StripeService.redirectToCheckout(widget.paymentSession.sessionID);
-      
+
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Redirecting to payment...'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(isMockSession
+                ? 'Payment simulated successfully.'
+                : 'Redirecting to payment...'),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -40,7 +45,8 @@ class _StripePaymentButtonState extends State<StripePaymentButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment error: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(
+                'Payment error: ${e.toString().replaceFirst('Exception: ', '')}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),
@@ -97,4 +103,3 @@ class _StripePaymentButtonState extends State<StripePaymentButton> {
     );
   }
 }
-

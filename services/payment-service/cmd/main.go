@@ -5,9 +5,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
+	"ride-sharing/services/payment-service/internal/domain"
 	"ride-sharing/services/payment-service/internal/events"
 	"ride-sharing/services/payment-service/internal/infrastructure/stripe"
 	"ride-sharing/services/payment-service/internal/service"
@@ -48,20 +50,32 @@ func main() {
 
 	appURL := env.GetString("APP_URL", "http://localhost:3000")
 
-	// Stripe config
+	// Stripe config / mock detection
+	rawStripeSecret := env.GetString("STRIPE_SECRET_KEY", "")
+	useMockStripe := env.GetBool("USE_MOCK_STRIPE", false)
+	if strings.Contains(rawStripeSecret, "<") || strings.EqualFold(rawStripeSecret, "changeme") {
+		useMockStripe = true
+		log.Println("Detected placeholder STRIPE_SECRET_KEY; enabling mock Stripe processor for local development.")
+	}
+
 	stripeCfg := &types.PaymentConfig{
-		StripeSecretKey: env.GetString("STRIPE_SECRET_KEY", ""),
+		StripeSecretKey: rawStripeSecret,
 		SuccessURL:      env.GetString("STRIPE_SUCCESS_URL", appURL+"?payment=success"),
 		CancelURL:       env.GetString("STRIPE_CANCEL_URL", appURL+"?payment=cancel"),
 	}
 
-	if stripeCfg.StripeSecretKey == "" {
+	if stripeCfg.StripeSecretKey == "" && !useMockStripe {
 		log.Fatalf("STRIPE_SECRET_KEY is not set")
 		return
 	}
 
-	// Stripe processor
-	paymentProcessor := stripe.NewStripeClient(stripeCfg)
+	var paymentProcessor domain.PaymentProcessor
+	if useMockStripe {
+		paymentProcessor = stripe.NewMockStripeClient(stripeCfg)
+		log.Println("Using mock Stripe processor; payments will be auto-approved. Set USE_MOCK_STRIPE=false and provide real keys to enable Stripe.")
+	} else {
+		paymentProcessor = stripe.NewStripeClient(stripeCfg)
+	}
 
 	// Service
 	svc := service.NewPaymentService(paymentProcessor)
@@ -75,8 +89,13 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
+	autoCompletePayments := env.GetBool("AUTO_COMPLETE_PAYMENTS", false)
+	if useMockStripe {
+		autoCompletePayments = true
+	}
+
 	// Trip Consumer
-	tripConsumer := events.NewTripConsumer(rabbitmq, svc)
+	tripConsumer := events.NewTripConsumer(rabbitmq, svc, autoCompletePayments)
 	go tripConsumer.Listen()
 
 	// Wait for shutdown signal

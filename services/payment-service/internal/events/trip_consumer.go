@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"ride-sharing/services/payment-service/internal/domain"
 	"ride-sharing/shared/contracts"
@@ -13,14 +14,16 @@ import (
 )
 
 type TripConsumer struct {
-	rabbitmq *messaging.RabbitMQ
-	service  domain.Service
+	rabbitmq             *messaging.RabbitMQ
+	service              domain.Service
+	autoCompletePayments bool
 }
 
-func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service domain.Service) *TripConsumer {
+func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service domain.Service, autoComplete bool) *TripConsumer {
 	return &TripConsumer{
-		rabbitmq: rabbitmq,
-		service:  service,
+		rabbitmq:             rabbitmq,
+		service:              service,
+		autoCompletePayments: autoComplete,
 	}
 }
 
@@ -93,5 +96,42 @@ func (c *TripConsumer) handleTripAccepted(ctx context.Context, payload messaging
 	}
 
 	log.Printf("Published payment session created event for trip: %s", payload.TripID)
+
+	if c.autoCompletePayments {
+		go c.simulatePaymentSuccess(ctx, payload)
+	}
+
 	return nil
+}
+
+func (c *TripConsumer) simulatePaymentSuccess(ctx context.Context, payload messaging.PaymentTripResponseData) {
+	select {
+	case <-time.After(2 * time.Second):
+	case <-ctx.Done():
+		return
+	}
+
+	updatePayload := messaging.PaymentStatusUpdateData{
+		TripID:   payload.TripID,
+		UserID:   payload.UserID,
+		DriverID: payload.DriverID,
+	}
+
+	payloadBytes, err := json.Marshal(updatePayload)
+	if err != nil {
+		log.Printf("Failed to marshal mock payment success payload: %v", err)
+		return
+	}
+
+	if err := c.rabbitmq.PublishMessage(ctx, contracts.PaymentEventSuccess,
+		contracts.AmqpMessage{
+			OwnerID: payload.UserID,
+			Data:    payloadBytes,
+		},
+	); err != nil {
+		log.Printf("Failed to publish mock payment success event: %v", err)
+		return
+	}
+
+	log.Printf("Mock payment success published for trip: %s", payload.TripID)
 }
