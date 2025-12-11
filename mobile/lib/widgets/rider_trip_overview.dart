@@ -410,10 +410,9 @@ class RiderTripOverview extends ConsumerWidget {
       );
     }
 
-    return TripOverviewCard(
+    return const TripOverviewCard(
       title: 'No trip ride fares',
       description: 'Please refresh the page',
     );
   }
 }
-
