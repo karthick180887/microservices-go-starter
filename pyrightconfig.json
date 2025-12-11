@@ -1,0 +1,9 @@
+{
+  "exclude": [
+    "**/Tiltfile"
+  ],
+  "reportMissingImports": false,
+  "reportUndefinedVariable": false,
+  "typeCheckingMode": "off"
+}
+
