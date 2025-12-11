@@ -115,8 +115,8 @@ class OSRMRouteResponse {
     // OSRM returns coordinates as [longitude, latitude] in GeoJSON format
     return route.geometry.coordinates
         .map((coord) => Coordinate(
-              latitude: (coord as List<dynamic>)[1].toDouble(),
-              longitude: (coord as List<dynamic>)[0].toDouble(),
+              latitude: (coord[1] as num).toDouble(),
+              longitude: (coord[0] as num).toDouble(),
             ))
         .toList();
   }
@@ -191,4 +191,3 @@ class OSRMWaypoint {
     );
   }
 }
-
