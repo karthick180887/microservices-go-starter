@@ -3,7 +3,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:flutter/services.dart';
 import '../constants.dart';
 import '../models/types.dart';
 import '../providers/rider_provider.dart';
@@ -135,7 +134,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     final drivers = ref.watch(
       riderProvider(widget.userId).select((state) => state.drivers),
     );
-    final tripStatus = ref.watch(
+    ref.watch(
       riderProvider(widget.userId).select((state) => state.tripStatus),
     );
     final error = ref.watch(
@@ -171,7 +170,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           spreadRadius: 0,
                           offset: const Offset(0, 2),
@@ -345,7 +344,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 20),
@@ -415,7 +414,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor, size: 20),
