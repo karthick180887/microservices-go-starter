@@ -180,10 +180,9 @@ class HTTPTripPreviewResponse {
   
   // Named constructor for creating from Route directly (for OSRM)
   HTTPTripPreviewResponse.fromRoute({
-    required Route route,
+    required this.route,
     List<RouteFare>? rideFares,
-  })  : route = route,
-        rideFares = rideFares ?? [];
+  }) : rideFares = rideFares ?? [];
 }
 
 class HTTPTripStartRequest {
@@ -209,4 +208,3 @@ class HTTPTripStartResponse {
   factory HTTPTripStartResponse.fromJson(Map<String, dynamic> json) =>
       HTTPTripStartResponse(tripID: json['tripID'] ?? '');
 }
-
