@@ -68,7 +68,7 @@ class DriverCard extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .primary
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -90,4 +90,3 @@ class DriverCard extends StatelessWidget {
     );
   }
 }
-
