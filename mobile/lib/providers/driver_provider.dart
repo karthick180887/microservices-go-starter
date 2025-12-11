@@ -47,6 +47,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
     _connect();
   }
   
+  @override
   bool get mounted => !_disposed;
 
   void setInitialLocation(Coordinate location, String geohash) {
@@ -206,4 +207,3 @@ class DriverProviderParams {
 
   DriverProviderParams({required this.userId, required this.packageSlug});
 }
-
