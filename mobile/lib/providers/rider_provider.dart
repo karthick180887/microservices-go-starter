@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/material.dart';
 import '../models/contracts.dart';
 import '../models/types.dart';
 import '../services/websocket_service.dart';
@@ -62,6 +61,7 @@ class RiderNotifier extends StateNotifier<RiderState> {
     _connect();
   }
   
+  @override
   bool get mounted => !_disposed;
 
   void setInitialLocation(Coordinate location) {
@@ -295,4 +295,3 @@ final riderProvider = StateNotifierProvider.family<RiderNotifier, RiderState,
   final apiService = ApiService();
   return RiderNotifier(wsService, apiService, userId);
 });
-
