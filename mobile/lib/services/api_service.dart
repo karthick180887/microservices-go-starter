@@ -14,10 +14,9 @@ class ApiService {
 
   ApiService({
     String? baseUrl,
-    bool useOSRM = false,
+    this.useOSRM = false,
     String? osrmServerUrl,
   })  : baseUrl = baseUrl ?? Constants.apiUrl,
-        useOSRM = useOSRM,
         _osrmService = useOSRM ? OSRMService(serverUrl: osrmServerUrl) : null;
 
   Future<HTTPTripPreviewResponse> previewTrip(
@@ -168,4 +167,3 @@ class ApiService {
     }
   }
 }
-
