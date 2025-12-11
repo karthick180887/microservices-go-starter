@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"ride-sharing/services/payment-service/internal/events"
 	"ride-sharing/services/payment-service/internal/infrastructure/stripe"
@@ -21,8 +22,8 @@ var GrpcAddr = env.GetString("GRPC_ADDR", ":9004")
 func main() {
 	// Initialize Tracing
 	tracerCfg := tracing.Config{
-		ServiceName: "payment-service",
-		Environment: env.GetString("ENVIRONMENT", "development"),
+		ServiceName:    "payment-service",
+		Environment:    env.GetString("ENVIRONMENT", "development"),
 		JaegerEndpoint: env.GetString("JAEGER_ENDPOINT", "http://jaeger:14268/api/traces"),
 	}
 
@@ -34,7 +35,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	defer sh(ctx)
-	
+
 	rabbitMqURI := env.GetString("RABBITMQ_URI", "amqp://rideshare:rideshare@rabbitmq:5672/")
 
 	// Setup graceful shutdown
@@ -66,9 +67,9 @@ func main() {
 	svc := service.NewPaymentService(paymentProcessor)
 
 	// RabbitMQ connection
-	rabbitmq, err := messaging.NewRabbitMQ(rabbitMqURI)
+	rabbitmq, err := connectRabbitMQWithRetry(ctx, rabbitMqURI, 10, 5*time.Second)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to initialize RabbitMQ, err: %v", err)
 	}
 	defer rabbitmq.Close()
 
@@ -81,4 +82,27 @@ func main() {
 	// Wait for shutdown signal
 	<-ctx.Done()
 	log.Println("Shutting down payment service...")
+}
+
+func connectRabbitMQWithRetry(ctx context.Context, uri string, attempts int, delay time.Duration) (*messaging.RabbitMQ, error) {
+	var lastErr error
+
+	for i := 1; i <= attempts; i++ {
+		rabbitmq, err := messaging.NewRabbitMQ(uri)
+		if err == nil {
+			log.Printf("Successfully connected to RabbitMQ on attempt %d", i)
+			return rabbitmq, nil
+		}
+
+		lastErr = err
+		log.Printf("RabbitMQ connection attempt %d/%d failed: %v", i, attempts, err)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+
+	return nil, lastErr
 }
