@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/types.dart';
 import '../models/contracts.dart';
 import '../providers/driver_provider.dart';
-import 'trip_overview_card.dart';
 import 'driver_card.dart';
 
 class DriverTripOverview extends ConsumerWidget {
@@ -277,4 +276,3 @@ class DriverTripOverview extends ConsumerWidget {
     );
   }
 }
-
