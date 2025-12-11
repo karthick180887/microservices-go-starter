@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/types.dart';
 import '../utils/math_utils.dart';
-import 'trip_overview_card.dart';
 
 class DriversList extends StatelessWidget {
   final TripPreview tripPreview;
@@ -58,7 +57,7 @@ class DriversList extends StatelessWidget {
                               color: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -138,4 +137,3 @@ class DriversList extends StatelessWidget {
     }
   }
 }
-
